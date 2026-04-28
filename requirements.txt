@@ -1,0 +1,15 @@
+# Django
+django>=4.2,<5.0
+django-ninja>=1.6.2
+pydantic>=2.0.0
+
+# 数据库
+djangorestframework>=3.14.0
+
+# 开发工具
+pytest>=8.0.0
+pytest-django>=4.8.0
+ruff>=0.4.0
+mypy>=1.9.0
+django-stubs>=4.2.0
+djangorestframework-stubs>=3.14.0
