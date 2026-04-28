@@ -1,15 +1,24 @@
-# Django
-django>=4.2,<5.0
+# 生产依赖（核心）
+# 推荐使用 uv 管理依赖: uv sync
+# 如需传统 pip 安装: pip install -r requirements.txt
+
+Django>=4.2,<5.0
 django-ninja>=1.6.2
 pydantic>=2.0.0
+email-validator>=2.0.0
+python-dotenv>=1.0.0
+dj-database-url>=2.0.0
+django-cors-headers>=4.0.0
 
-# 数据库
-djangorestframework>=3.14.0
+# 如需 PostgreSQL，取消下面注释:
+# psycopg2-binary>=2.9.0
 
-# 开发工具
-pytest>=8.0.0
-pytest-django>=4.8.0
-ruff>=0.4.0
-mypy>=1.9.0
-django-stubs>=4.2.0
-djangorestframework-stubs>=3.14.0
+# 如需 MySQL，取消下面注释:
+# mysqlclient>=2.2.0
+
+# 开发依赖（可选）
+# pytest>=8.0.0
+# pytest-django>=4.8.0
+# ruff>=0.4.0
+# mypy>=1.9.0
+# django-stubs>=4.2.0

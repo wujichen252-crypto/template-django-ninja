@@ -1,6 +1,5 @@
 """Events Pydantic Schema 定义."""
 from datetime import date, datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -8,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 class CategorySchema(BaseModel):
     """分类 Schema."""
 
-    model_config = dict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
@@ -27,14 +26,14 @@ class CategoryCreateSchema(BaseModel):
 class EventSchema(BaseModel):
     """事件 Schema."""
 
-    model_config = dict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     title: str
     description: str = ""
     start_date: date
     end_date: date
-    category: Optional[CategorySchema] = None
+    category: CategorySchema | None = None
     location: str = ""
     max_attendees: int = 0
     created_at: datetime
@@ -48,7 +47,7 @@ class EventCreateSchema(BaseModel):
     description: str = Field(default="", description="事件描述")
     start_date: date = Field(..., description="开始日期")
     end_date: date = Field(..., description="结束日期")
-    category_id: Optional[int] = Field(None, description="分类ID")
+    category_id: int | None = Field(None, description="分类ID")
     location: str = Field(default="", max_length=200, description="地点")
     max_attendees: int = Field(default=0, ge=0, description="最大参与人数")
 
@@ -56,19 +55,19 @@ class EventCreateSchema(BaseModel):
 class EventUpdateSchema(BaseModel):
     """更新事件请求 Schema."""
 
-    title: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    category_id: Optional[int] = None
-    location: Optional[str] = Field(None, max_length=200)
-    max_attendees: Optional[int] = Field(None, ge=0)
+    title: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    category_id: int | None = None
+    location: str | None = Field(None, max_length=200)
+    max_attendees: int | None = Field(None, ge=0)
 
 
 class AttendeeSchema(BaseModel):
     """参与者 Schema."""
 
-    model_config = dict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     event_id: int

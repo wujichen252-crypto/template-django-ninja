@@ -1,13 +1,13 @@
 """Events API 测试."""
 from datetime import date, timedelta
-from unittest.mock import patch
+from typing import ClassVar
 
 from django.test import TestCase
+from ninja import NinjaAPI
 from ninja.testing import TestClient
 
 from events.api import router
 from events.models import Attendee, Category, Event
-from ninja import NinjaAPI
 
 api = NinjaAPI()
 api.add_router("/events", router)
@@ -17,15 +17,17 @@ client = TestClient(api)
 class CategoryAPITest(TestCase):
     """分类 API 测试."""
 
+    category: ClassVar[Category]
+
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         """设置测试数据."""
         cls.category = Category.objects.create(
             name="技术会议",
             description="技术相关会议",
         )
 
-    def test_list_categories(self):
+    def test_list_categories(self) -> None:
         """测试获取分类列表."""
         response = client.get("/events/categories")
         assert response.status_code == 200
@@ -33,7 +35,7 @@ class CategoryAPITest(TestCase):
         assert len(data) == 1
         assert data[0]["name"] == "技术会议"
 
-    def test_create_category(self):
+    def test_create_category(self) -> None:
         """测试创建分类."""
         response = client.post(
             "/events/categories",
@@ -44,19 +46,19 @@ class CategoryAPITest(TestCase):
         assert data["name"] == "新分类"
         assert Category.objects.count() == 2
 
-    def test_get_category(self):
+    def test_get_category(self) -> None:
         """测试获取单个分类."""
         response = client.get(f"/events/categories/{self.category.id}")
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "技术会议"
 
-    def test_get_category_not_found(self):
+    def test_get_category_not_found(self) -> None:
         """测试获取不存在的分类."""
         response = client.get("/events/categories/9999")
         assert response.status_code == 404
 
-    def test_update_category(self):
+    def test_update_category(self) -> None:
         """测试更新分类."""
         response = client.put(
             f"/events/categories/{self.category.id}",
@@ -66,7 +68,7 @@ class CategoryAPITest(TestCase):
         self.category.refresh_from_db()
         assert self.category.name == "更新后的分类"
 
-    def test_delete_category(self):
+    def test_delete_category(self) -> None:
         """测试删除分类."""
         response = client.delete(f"/events/categories/{self.category.id}")
         assert response.status_code == 200
@@ -76,8 +78,11 @@ class CategoryAPITest(TestCase):
 class EventAPITest(TestCase):
     """事件 API 测试."""
 
+    category: ClassVar[Category]
+    event: ClassVar[Event]
+
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         """设置测试数据."""
         cls.category = Category.objects.create(name="技术会议")
         cls.event = Event.objects.create(
@@ -90,7 +95,7 @@ class EventAPITest(TestCase):
             max_attendees=100,
         )
 
-    def test_list_events(self):
+    def test_list_events(self) -> None:
         """测试获取事件列表."""
         response = client.get("/events/events")
         assert response.status_code == 200
@@ -98,7 +103,7 @@ class EventAPITest(TestCase):
         assert data["total"] == 1
         assert len(data["events"]) == 1
 
-    def test_list_events_pagination(self):
+    def test_list_events_pagination(self) -> None:
         """测试事件分页."""
         response = client.get("/events/events?page=1&page_size=5")
         assert response.status_code == 200
@@ -106,7 +111,7 @@ class EventAPITest(TestCase):
         assert data["page"] == 1
         assert data["page_size"] == 5
 
-    def test_create_event(self):
+    def test_create_event(self) -> None:
         """测试创建事件."""
         response = client.post(
             "/events/events",
@@ -123,7 +128,7 @@ class EventAPITest(TestCase):
         assert response.status_code == 200
         assert Event.objects.count() == 2
 
-    def test_create_event_invalid_dates(self):
+    def test_create_event_invalid_dates(self) -> None:
         """测试创建事件（日期无效）."""
         response = client.post(
             "/events/events",
@@ -135,14 +140,14 @@ class EventAPITest(TestCase):
         )
         assert response.status_code == 400
 
-    def test_get_event(self):
+    def test_get_event(self) -> None:
         """测试获取单个事件."""
         response = client.get(f"/events/events/{self.event.id}")
         assert response.status_code == 200
         data = response.json()
         assert data["title"] == "Django 大会"
 
-    def test_update_event(self):
+    def test_update_event(self) -> None:
         """测试更新事件."""
         response = client.put(
             f"/events/events/{self.event.id}",
@@ -153,7 +158,7 @@ class EventAPITest(TestCase):
         assert self.event.title == "更新后的大会"
         assert self.event.location == "深圳"
 
-    def test_delete_event(self):
+    def test_delete_event(self) -> None:
         """测试删除事件."""
         response = client.delete(f"/events/events/{self.event.id}")
         assert response.status_code == 200
@@ -163,8 +168,11 @@ class EventAPITest(TestCase):
 class AttendeeAPITest(TestCase):
     """参与者 API 测试."""
 
+    event: ClassVar[Event]
+    attendee: ClassVar[Attendee]
+
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         """设置测试数据."""
         cls.event = Event.objects.create(
             title="测试事件",
@@ -178,14 +186,14 @@ class AttendeeAPITest(TestCase):
             email="zhangsan@example.com",
         )
 
-    def test_list_attendees(self):
+    def test_list_attendees(self) -> None:
         """测试获取参与者列表."""
         response = client.get(f"/events/events/{self.event.id}/attendees")
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
 
-    def test_create_attendee(self):
+    def test_create_attendee(self) -> None:
         """测试创建参与者."""
         response = client.post(
             f"/events/events/{self.event.id}/attendees",
@@ -198,7 +206,7 @@ class AttendeeAPITest(TestCase):
         assert response.status_code == 200
         assert Attendee.objects.count() == 2
 
-    def test_create_attendee_event_full(self):
+    def test_create_attendee_event_full(self) -> None:
         """测试创建参与者（事件已满）."""
         response = client.post(
             f"/events/events/{self.event.id}/attendees",
@@ -216,7 +224,7 @@ class AttendeeAPITest(TestCase):
         )
         assert response.status_code == 400
 
-    def test_delete_attendee(self):
+    def test_delete_attendee(self) -> None:
         """测试删除参与者."""
         response = client.delete(f"/events/attendees/{self.attendee.id}")
         assert response.status_code == 200

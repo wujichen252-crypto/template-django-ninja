@@ -1,5 +1,5 @@
 """Events 业务逻辑层服务."""
-from typing import Optional
+from datetime import date
 
 from django.db.models import QuerySet
 
@@ -15,7 +15,7 @@ class CategoryService:
         return Category.objects.all()
 
     @staticmethod
-    def get_category_by_id(category_id: int) -> Optional[Category]:
+    def get_category_by_id(category_id: int) -> Category | None:
         """根据ID获取分类."""
         try:
             return Category.objects.get(id=category_id)
@@ -30,9 +30,9 @@ class CategoryService:
     @staticmethod
     def update_category(
         category_id: int,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-    ) -> Optional[Category]:
+        name: str | None = None,
+        description: str | None = None,
+    ) -> Category | None:
         """更新分类."""
         category = CategoryService.get_category_by_id(category_id)
         if category is None:
@@ -72,7 +72,7 @@ class EventService:
         )
 
     @staticmethod
-    def get_event_by_id(event_id: int) -> Optional[Event]:
+    def get_event_by_id(event_id: int) -> Event | None:
         """根据ID获取事件."""
         try:
             return Event.objects.select_related("category").get(id=event_id)
@@ -82,10 +82,10 @@ class EventService:
     @staticmethod
     def create_event(
         title: str,
-        start_date,
-        end_date,
+        start_date: date,
+        end_date: date,
         description: str = "",
-        category_id: Optional[int] = None,
+        category_id: int | None = None,
         location: str = "",
         max_attendees: int = 0,
     ) -> Event:
@@ -106,14 +106,14 @@ class EventService:
     @staticmethod
     def update_event(
         event_id: int,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        start_date=None,
-        end_date=None,
-        category_id: Optional[int] = None,
-        location: Optional[str] = None,
-        max_attendees: Optional[int] = None,
-    ) -> Optional[Event]:
+        title: str | None = None,
+        description: str | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        category_id: int | None = None,
+        location: str | None = None,
+        max_attendees: int | None = None,
+    ) -> Event | None:
         """更新事件."""
         event = EventService.get_event_by_id(event_id)
         if event is None:
@@ -168,7 +168,7 @@ class AttendeeService:
         return Attendee.objects.filter(event_id=event_id)
 
     @staticmethod
-    def get_attendee_by_id(attendee_id: int) -> Optional[Attendee]:
+    def get_attendee_by_id(attendee_id: int) -> Attendee | None:
         """根据ID获取参与者."""
         try:
             return Attendee.objects.get(id=attendee_id)
@@ -182,7 +182,7 @@ class AttendeeService:
         email: str,
         phone: str = "",
         notes: str = "",
-    ) -> Optional[Attendee]:
+    ) -> Attendee | None:
         """创建参与者."""
         event = EventService.get_event_by_id(event_id)
         if event is None:
