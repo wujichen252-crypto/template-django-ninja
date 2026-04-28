@@ -17,69 +17,23 @@
 | 代码检查 | ruff |
 | 包管理 | uv（推荐） |
 
-## 项目结构
-
-```
-project_root/
-├── config/                  # Django 项目配置
-│   ├── __init__.py
-│   ├── settings.py          # 项目设置（含 .env 加载、CORS、日志）
-│   ├── urls.py              # 根路由（含 API 注册和健康检查）
-│   ├── wsgi.py              # WSGI 应用
-│   └── asgi.py              # ASGI 应用
-├── events/                  # 示例 App（事件管理系统）
-│   ├── __init__.py
-│   ├── apps.py
-│   ├── admin.py             # Django Admin
-│   ├── models.py            # 数据模型（Category / Event / Attendee）
-│   ├── schemas.py           # Pydantic Schema
-│   ├── services.py          # 业务逻辑层
-│   ├── api.py               # API 路由
-│   ├── views.py
-│   └── tests/               # 测试目录
-│       └── test_api.py
-├── logs/                    # 日志目录
-├── manage.py
-├── pyproject.toml           # 项目配置 + 依赖声明
-├── uv.lock                  # 依赖锁定文件
-├── requirements.txt         # 兼容 pip 的依赖列表
-├── .env.example             # 环境变量模板
-├── .python-version          # Python 版本锁定
-└── README.md
-```
-
 ## 快速开始
 
-### 方式一：uv（推荐，极速）
-
 ```bash
-# 1. 安装依赖（含开发依赖）
+# 1. 安装依赖
 uv sync --dev
 
-# 2. 数据库迁移
+# 2. 环境配置（默认 SQLite，无需修改）
+cp .env.example .env
+
+# 3. 数据库迁移
 uv run python manage.py migrate
 
-# 3. 运行开发服务器
+# 4. 启动服务
 uv run python manage.py runserver
 ```
 
-### 方式二：pip（传统方式）
-
-```bash
-# 1. 创建虚拟环境并激活
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# .venv\Scripts\activate    # Windows
-
-# 2. 安装依赖
-pip install -r requirements.txt
-
-# 3. 数据库迁移
-python manage.py migrate
-
-# 4. 运行开发服务器
-python manage.py runserver
-```
+> 📖 更详细的安装指南、数据库切换、常见问题请见 [docs/getting-started.md](./docs/getting-started.md)。
 
 ## 访问 API 文档
 
@@ -87,63 +41,7 @@ python manage.py runserver
 - **ReDoc**: http://127.0.0.1:8000/api/redoc
 - **健康检查**: http://127.0.0.1:8000/api/
 
-## 环境变量配置
-
-复制 `.env.example` 为 `.env`，按需修改：
-
-```bash
-cp .env.example .env
-```
-
-| 变量名 | 说明 | 默认值 |
-|--------|------|--------|
-| `DJANGO_SECRET_KEY` | Django 密钥 | `django-insecure-dev-key-change-in-production` |
-| `DJANGO_DEBUG` | 调试模式 | `True` |
-| `DJANGO_ALLOWED_HOSTS` | 允许的主机 | `localhost,127.0.0.1` |
-| `DATABASE_URL` | 数据库连接 URL | `sqlite:///db.sqlite3` |
-| `CORS_ALLOWED_ORIGINS` | 跨域允许来源 | `http://localhost:3000,...` |
-
-### 数据库切换示例
-
-```bash
-# SQLite（默认，零配置）
-DATABASE_URL=sqlite:///db.sqlite3
-
-# PostgreSQL
-DATABASE_URL=postgres://user:password@localhost:5432/mydb
-
-# MySQL
-DATABASE_URL=mysql://user:password@localhost:3306/mydb
-```
-
-使用 PostgreSQL / MySQL 时，请先安装对应驱动：
-
-```bash
-# uv
-uv sync --extra db
-
-# pip
-pip install psycopg2-binary  # PostgreSQL
-pip install mysqlclient      # MySQL
-```
-
-## 开发命令
-
-```bash
-# 运行测试
-uv run pytest
-
-# 代码检查
-uv run ruff check .
-
-# 代码格式化
-uv run ruff format .
-
-# 类型检查
-uv run mypy .
-```
-
-## API 接口
+## API 接口概览
 
 ### 健康检查
 
@@ -174,25 +72,43 @@ uv run mypy .
 | POST | `/api/events/events/{id}/attendees` | 添加参与者 |
 | DELETE | `/api/events/attendees/{id}` | 删除参与者 |
 
-## 架构设计
-
-### 分层结构
+## 项目结构
 
 ```
-Handler (api.py) -> Service (services.py) -> Repository (models.py)
+project_root/
+├── config/                  # Django 项目配置
+├── events/                  # 示例 App（事件管理系统）
+├── logs/                    # 日志目录
+├── docs/                    # 📖 项目文档
+│   ├── getting-started.md   # 详细启动指南
+│   ├── architecture.md      # 架构设计说明
+│   └── uv-best-practice.md  # uv 使用最佳实践
+├── manage.py
+├── pyproject.toml           # 项目配置 + 依赖声明
+├── uv.lock                  # 依赖锁定文件
+├── requirements.txt         # 兼容 pip 的依赖列表
+├── .env.example             # 环境变量模板
+├── .python-version          # Python 版本锁定
+└── README.md
 ```
 
-- **api.py**: 定义 API 路由，处理请求/响应，调用 Service 层
-- **services.py**: 封装业务逻辑、数据验证、事务管理
-- **models.py**: 定义数据模型，Django ORM 操作
+> 📖 完整的架构说明请见 [docs/architecture.md](./docs/architecture.md)。
 
-### 安全认证配置
+## 开发命令
 
-API 文档已预配置两种安全方案：
-- **Bearer Token** (`Authorization: Bearer <JWT>`)
-- **API Key** (`X-API-Key: <key>`)
+```bash
+# 运行测试
+uv run pytest
 
-需在具体接口上使用 `@router.get(..., auth=...)` 开启认证。
+# 代码检查
+uv run ruff check .
+
+# 代码格式化
+uv run ruff format .
+
+# 类型检查
+uv run mypy .
+```
 
 ## 代码规范
 
