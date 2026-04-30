@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "基于 Django + django-ninja 的 RESTful API 后端模板项目"
 requires-python = ">=3.12"
 dependencies = [
-    "Django>=4.2,<5.0",
+    "Django==4.2.16",
     "django-ninja>=1.6.2",
     "pydantic>=2.0.0",
     "email-validator>=2.0.0",
