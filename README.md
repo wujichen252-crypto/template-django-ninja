@@ -15,7 +15,7 @@
 | 测试 | pytest + pytest-django |
 | 类型检查 | mypy（严格模式） |
 | 代码检查 | ruff |
-| 包管理 | uv（推荐） |
+| 包管理 | uv |
 
 ## 快速开始
 
@@ -86,7 +86,6 @@ project_root/
 ├── manage.py
 ├── pyproject.toml           # 项目配置 + 依赖声明
 ├── uv.lock                  # 依赖锁定文件
-├── requirements.txt         # 兼容 pip 的依赖列表
 ├── .env.example             # 环境变量模板
 ├── .python-version          # Python 版本锁定
 └── README.md

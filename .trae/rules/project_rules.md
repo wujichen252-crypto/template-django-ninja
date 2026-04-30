@@ -139,7 +139,6 @@ project_root/
 │   ├── wsgi.py
 │   └── asgi.py
 ├── manage.py
-├── requirements.txt
 └── pyproject.toml          # ruff、mypy 等工具配置
 ```
 
@@ -149,25 +148,25 @@ project_root/
 
 ```bash
 # 安装依赖
-pip install -r requirements.txt
+uv sync --dev
 
 # 运行数据库迁移
-python manage.py migrate
+uv run python manage.py migrate
 
 # 运行开发服务器
-python manage.py runserver
+uv run python manage.py runserver
 
 # 运行测试
-pytest
+uv run pytest
 
 # 代码检查
-ruff check .
+uv run ruff check .
 
 # 代码格式化
-ruff format .
+uv run ruff format .
 
 # 类型检查
-mypy .
+uv run mypy .
 ```
 
 ---
@@ -198,7 +197,7 @@ style:   代码格式
 ## 额外注意事项
 
 - 敏感配置（SECRET_KEY、数据库密码等）使用环境变量，禁止硬编码
-- 数据库迁移文件必须经过 `python manage.py makemigrations` 生成
-- 每次提交前运行 `ruff check .` 和 `mypy .` 确保代码质量
+- 数据库迁移文件必须经过 `uv run python manage.py makemigrations` 生成
+- 每次提交前运行 `uv run ruff check .` 和 `uv run mypy .` 确保代码质量
 - API 变更需同步更新文档
 - 禁止在代码中保留调试输出（print 语句）

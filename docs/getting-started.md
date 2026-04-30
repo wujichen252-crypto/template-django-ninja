@@ -7,11 +7,11 @@
 | 项目 | 版本 |
 |------|------|
 | Python | >= 3.12 |
-| 包管理器 | uv（推荐）或 pip |
+| 包管理器 | uv |
 
 > 项目根目录的 `.python-version` 文件已锁定 Python 版本为 `3.12`，建议使用 [pyenv](https://github.com/pyenv/pyenv) 或 uv 管理 Python 版本。
 
-## 方式一：uv（推荐）
+## 使用 uv
 
 ### 1. 安装 uv
 
@@ -55,33 +55,6 @@ uv run python manage.py runserver
 
 访问 http://127.0.0.1:8000/api/docs 查看 Swagger 文档。
 
----
-
-## 方式二：pip（传统方式）
-
-### 1. 创建虚拟环境
-
-```bash
-python -m venv .venv
-
-# Linux/macOS
-source .venv/bin/activate
-
-# Windows
-.venv\Scripts\activate
-```
-
-### 2. 安装依赖
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. 后续步骤
-
-与 uv 方式相同：复制 `.env` → 执行 `migrate` → `runserver`。
-
----
 
 ## 开发常用命令
 

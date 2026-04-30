@@ -316,9 +316,9 @@ uv lock
 rm requirements.txt
 ```
 
-### 7.2 兼容模式（临时过渡）
+### 7.2 遗留项目兼容模式（仅外部项目过渡）
 ```bash
-# 不修改 pyproject.toml，纯 pip 兼容操作
+# 针对尚未迁移到 pyproject.toml 的外部遗留项目，可临时使用 uv pip 子命令
 uv pip install -r requirements.txt      # 安装
 uv pip freeze > requirements.txt        # 导出
 uv pip compile requirements.in -o requirements.txt  # 解析依赖树
