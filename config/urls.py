@@ -3,7 +3,7 @@ from django.http import HttpRequest
 from django.urls import path
 from ninja import NinjaAPI
 
-from events.api import router as events_router
+from api.api import router as api_router
 
 api = NinjaAPI(
     title="Django Ninja Template API",
@@ -27,7 +27,7 @@ api = NinjaAPI(
     },
 )
 
-api.add_router("/events", events_router)
+api.add_router("/", api_router)
 
 
 @api.get("/", tags=["Health"], summary="服务健康检查")

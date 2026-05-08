@@ -10,10 +10,8 @@
 │         Router → NinjaAPI            │
 ├─────────────────────────────────────┤
 │         Service 层 (services.py)     │  ← 业务逻辑、数据校验、事务控制
-│      Category / Event / Attendee     │
 ├─────────────────────────────────────┤
 │         Model 层 (models.py)         │  ← Django ORM、数据持久化
-│      Category / Event / Attendee     │
 └─────────────────────────────────────┘
 ```
 
@@ -62,17 +60,19 @@ Client Response
 ## 模块划分
 
 ```
-events/                    ← 示例 App，可按此结构复制新模块
-├── models.py              ← 数据模型
-├── schemas.py             ← Pydantic 请求/响应模型
-├── services.py            ← 业务逻辑
-├── api.py                 ← API 路由
-├── admin.py               ← 后台管理配置
+api/                        # 主应用模块
+├── __init__.py
+├── api.py                 # API 路由定义
+├── apps.py                # 应用配置
+├── models.py              # 数据模型
+├── schemas.py             # Pydantic 请求/响应模型
+├── services.py            # 业务逻辑
+├── views.py               # 视图层（备用）
 └── tests/
-    └── test_api.py        ← 接口测试
+    └── test_api.py        # 接口测试
 ```
 
-新增业务模块时，建议完整复制 `events/` 目录结构，重命名后注册到 `config/settings.py` 的 `INSTALLED_APPS` 中。
+新增业务模块时，可按上述结构扩展 `api/` 目录下的文件。
 
 ## 安全设计
 
@@ -92,7 +92,7 @@ events/                    ← 示例 App，可按此结构复制新模块
 
 > 实际开启认证需在接口装饰器上添加 `auth` 参数，例如：
 > ```python
-> @router.get("/events", auth=AuthBearer())
+> @router.get("/items", auth=AuthBearer())
 > ```
 
 ### CORS 策略
@@ -112,6 +112,6 @@ http://localhost:5173      # Vite 默认
 |------|---------|------|
 | DEBUG=True | 控制台 | INFO |
 | DEBUG=False | 控制台 + 文件 | INFO |
-| events 模块 | 控制台 + 文件 | DEBUG/INFO |
+| api 模块 | 控制台 + 文件 | DEBUG/INFO |
 
 日志文件位于 `logs/django.log`，按 5MB 自动轮询，保留 5 个备份。

@@ -9,8 +9,8 @@
 
 | 类别 | 技术 |
 |------|------|
-| 框架 | Django 3.1+ |
-| REST API | django-ninja v1.6.2 |
+| 框架 | Django 3.2 LTS |
+| REST API | django-ninja v1.3.0 |
 | 数据验证 | pydantic v2 |
 | 数据库 | SQLite（默认）/ Django ORM |
 | 测试 | pytest + pytest-django |
@@ -23,7 +23,7 @@
 ## 代码规范
 
 ### 通用约定
-- 使用 Python 3.12+ 语法特性
+- 使用 Python 3.10+ 语法特性
 - 所有函数/方法必须包含完整类型注解（`disallow_untyped_defs = True`）
 - 函数长度不超过 50 行，超过需拆分
 - 禁止使用 `Any` 类型（除非绝对必要）
@@ -50,14 +50,14 @@ from pydantic import BaseModel
 
 from ninja import NinjaAPI, Router, Schema
 
-from .models import Event
+from .models import Item
 ```
 
 ### API 设计规范
 - 使用 `Router` 组织 API 端点，按功能模块拆分
 - 通过 `api.add_router()` 挂载子路由
-- 路由路径前缀使用小写字母，单词间用连字符（`/api/v1/events/`）
-- URL 名称使用 `kebab-case`（如 `url_name="event-create-url-name"`）
+- 路由路径前缀使用小写字母，单词间用连字符（`/api/v1/items/`）
+- URL 名称使用 `kebab-case`（如 `url_name="item-create-url-name"`）
 - 禁止在 Handler 中编写业务逻辑，调用 Service 层处理
 
 ### Schema 设计规范
@@ -67,11 +67,11 @@ from .models import Event
 - Resolver 方法命名格式：`resolve_<field_name>`
 
 ```python
-class EventSchema(BaseModel):
+class ItemSchema(BaseModel):
     model_config = dict(from_attributes=True)
-    title: str
-    start_date: date
-    end_date: date
+    name: str
+    description: str
+    price: float
 ```
 
 ### 模型设计规范
@@ -81,9 +81,9 @@ class EventSchema(BaseModel):
 - 关联关系使用 `ForeignKey`、`OneToOneField`、`ManyToManyField`
 
 ```python
-class Event(models.Model):
-    title = models.CharField(max_length=100)
-    category = models.OneToOneField(Category, null=True, blank=True, on_delete=models.SET_NULL)
+class Item(models.Model):
+    name = models.CharField(max_length=100, verbose_name="物品名称")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="价格")
 ```
 
 ### 错误处理规范
@@ -94,7 +94,7 @@ class Event(models.Model):
 ```python
 from ninja.errors import HttpError
 
-raise HttpError(404, "Event not found")
+raise HttpError(404, "Item not found")
 ```
 
 ### 测试规范
@@ -110,8 +110,8 @@ from ninja.testing import TestClient
 
 client = TestClient(api)
 
-def test_get_events():
-    response = client.get("/events")
+def test_get_items():
+    response = client.get("/items")
     assert response.status_code == 200
 ```
 
@@ -121,10 +121,10 @@ def test_get_events():
 
 ```
 project_root/
-├── <app_name>/              # Django App 目录
+├── api/                      # 主应用目录
 │   ├── __init__.py
-│   ├── admin.py
 │   ├── api.py              # API 路由和端点定义
+│   ├── apps.py             # 应用配置
 │   ├── models.py           # 数据模型
 │   ├── schemas.py          # pydantic Schema 定义
 │   ├── services.py         # 业务逻辑层
@@ -132,7 +132,7 @@ project_root/
 │   └── tests/
 │       ├── __init__.py
 │       └── test_api.py
-├── <project_name>/         # Django 项目配置目录
+├── config/                  # Django 项目配置目录
 │   ├── __init__.py
 │   ├── settings.py
 │   ├── urls.py             # 根路由配置
@@ -152,6 +152,9 @@ uv sync --dev
 
 # 运行数据库迁移
 uv run python manage.py migrate
+
+# 创建迁移
+uv run python manage.py makemigrations api
 
 # 运行开发服务器
 uv run python manage.py runserver

@@ -35,7 +35,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "events",
+    "api",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -141,7 +141,7 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
-        "events": {
+        "api": {
             "handlers": ["console", "file"],
             "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,

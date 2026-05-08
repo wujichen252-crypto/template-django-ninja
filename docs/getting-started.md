@@ -6,10 +6,10 @@
 
 | 项目 | 版本 |
 |------|------|
-| Python | >= 3.12 |
+| Python | >= 3.10 |
 | 包管理器 | uv |
 
-> 项目根目录的 `.python-version` 文件已锁定 Python 版本为 `3.12`，建议使用 [pyenv](https://github.com/pyenv/pyenv) 或 uv 管理 Python 版本。
+> 项目根目录的 `.python-version` 文件已锁定 Python 版本为 `3.10`，建议使用 [pyenv](https://github.com/pyenv/pyenv) 或 uv 管理 Python 版本。
 
 ## 使用 uv
 
@@ -31,6 +31,12 @@ uv sync --dev
 
 # 如需使用 PostgreSQL / MySQL，额外安装数据库驱动
 uv sync --dev --extra db
+
+# 如需使用 Redis 缓存
+uv sync --dev --extra redis
+
+# 如需使用云存储（ 七牛 / 阿里云 OSS）
+uv sync --dev --extra storage
 ```
 
 ### 3. 配置环境变量
@@ -82,12 +88,11 @@ uv run mypy .
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### Q: `migrate` 后没有表创建？
-
-请确认 `events/migrations/` 目录下的迁移文件存在。如果缺失，可尝试：
+### Q: 如何创建新的业务模块？
 
 ```bash
-uv run python manage.py makemigrations events
+# 在 api 应用下创建模型后，执行迁移
+uv run python manage.py makemigrations api
 uv run python manage.py migrate
 ```
 
@@ -111,3 +116,14 @@ DATABASE_URL=mysql://user:password@localhost:3306/dbname
 ```bash
 uv sync --extra db
 ```
+
+## 可选依赖组
+
+| 组名 | 包含依赖 | 安装命令 |
+|------|---------|---------|
+| db | mysqlclient, psycopg2-binary | `--extra db` |
+| redis | redis, django-redis | `--extra redis` |
+| storage | Pillow, qiniu, oss2 | `--extra storage` |
+| excel | openpyxl | `--extra excel` |
+| pdf | xhtml2pdf, pdfkit | `--extra pdf` |
+| auth | bcrypt | `--extra auth` |
