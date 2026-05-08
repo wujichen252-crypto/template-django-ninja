@@ -1,5 +1,4 @@
 """URL 配置文件."""
-from django.contrib import admin
 from django.http import HttpRequest
 from django.urls import path
 from ninja import NinjaAPI
@@ -38,6 +37,5 @@ def health_check(request: HttpRequest) -> dict[str, str]:
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
     path("api/", api.urls),
 ]
