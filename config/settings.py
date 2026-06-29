@@ -50,12 +50,19 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "common.logging.RequestIdMiddleware",  # 请求追踪 ID
     "django.middleware.common.CommonMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
+
+# 请求追踪 ID（common.logging 不可用时跳过）
+try:
+    import common.logging  # noqa: F401
+
+    MIDDLEWARE.insert(4, "common.logging.RequestIdMiddleware")
+except ImportError:
+    pass
 
 ROOT_URLCONF = "config.urls"
 
