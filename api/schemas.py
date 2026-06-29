@@ -4,6 +4,8 @@
 - Field 验证（min_length, gt, examples）
 - 泛型分页响应
 - 统一错误响应格式
+
+共享 Schema 见 common.base.schemas。
 """
 
 from datetime import datetime
@@ -13,19 +15,21 @@ from typing import Literal
 from ninja import Schema
 from pydantic import Field, field_validator
 
+# 共享 Schema 在此 re-export，保持向后兼容
+from common.base.schemas import (
+    ErrorResponse,
+    MessageResponse,
+    PaginatedResponse,
+)
 
-class MessageResponse(Schema):
-    """通用消息响应."""
-
-    message: str
-
-
-class ErrorResponse(Schema):
-    """统一错误响应格式."""
-
-    detail: str
-    code: str = "error"
-
+__all__ = [
+    "ErrorResponse",
+    "MessageResponse",
+    "PaginatedResponse",
+    "ItemCreate",
+    "ItemUpdate",
+    "ItemResponse",
+]
 
 # ─── Item Schemas ────────────────────────────────────────────────
 
@@ -104,16 +108,3 @@ class ItemResponse(Schema):
     status: str
     created_at: datetime
     updated_at: datetime
-
-
-# ─── Pagination ──────────────────────────────────────────────────
-
-
-class PaginatedResponse[T](Schema):
-    """泛型分页响应."""
-
-    items: list[T]
-    total: int
-    page: int
-    per_page: int
-    total_pages: int

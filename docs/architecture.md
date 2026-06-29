@@ -57,22 +57,50 @@ Client Response
 - **可复用**：Service 方法可在 Admin 命令、Celery 任务中复用
 - **可维护**：业务变更集中在 Service，不影响接口契约
 
-## 模块划分
+## 多 App 模块划分
 
 ```
-api/                        # 主应用模块
-├── __init__.py
-├── api.py                 # API 路由定义
-├── apps.py                # 应用配置
-├── models.py              # 数据模型
-├── schemas.py             # Pydantic 请求/响应模型
-├── services.py            # 业务逻辑
-├── views.py               # 视图层（备用）
-└── tests/
-    └── test_api.py        # 接口测试
+template_django/
+├── api/                        # Demo/参考应用（路由: /api/demo/）
+│   └── 完整 CRUD 示例（Item 模型）
+├── apps/                       # 🆕 业务模块命名空间
+│   └── example/                # 参考 App（路由: /api/example/）
+│       ├── models.py           # ExampleTag（继承 TimestampMixin）
+│       ├── schemas.py          # TagCreate/Update/Response
+│       ├── services.py         # CRUD + 自定义异常
+│       ├── api.py              # Router(tags=["Example"])
+│       ├── admin.py            # Admin 注册
+│       └── tests/              # 三层测试
+├── common/                     # 🆕 共享基础设施
+│   ├── base/models.py          # TimestampMixin, SoftDeleteMixin
+│   ├── base/exceptions.py      # BusinessError
+│   └── base/schemas.py         # PaginatedResponse[T], ErrorResponse
 ```
 
-新增业务模块时，可按上述结构扩展 `api/` 目录下的文件。
+### 每个 App 的内部结构
+
+每个业务 App 内部仍然使用三层架构：
+
+```
+apps/xxx/
+├── api.py             API 层 → 路由、参数校验、响应
+├── services.py        Service 层 → 业务逻辑、事务
+├── models.py          Model 层 → 数据持久化
+├── schemas.py         Pydantic Schema
+├── admin.py           Admin 配置
+└── tests/             测试
+```
+
+### 新增模块流程
+
+```bash
+# 一键脚手架
+uv run python scaffold_app.py <模块名>
+
+# 迁移
+uv run python manage.py makemigrations <模块短名>
+uv run python manage.py migrate <模块短名>
+```
 
 ## 安全设计
 

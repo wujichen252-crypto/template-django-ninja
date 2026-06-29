@@ -13,8 +13,10 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError, ValidationError
 from ninja.security import HttpBearer
 
-from api.api import router as api_router
-from api.exceptions import BusinessError, ItemNotFoundError
+from api.api import router as demo_router
+from api.exceptions import ItemNotFoundError
+from apps.example.api import router as example_router
+from common.base.exceptions import BusinessError
 
 # ─── 认证后端 ────────────────────────────────────────────────────
 
@@ -61,7 +63,8 @@ api = NinjaAPI(
     },
 )
 
-api.add_router("/", api_router)
+api.add_router("/demo/", demo_router)
+api.add_router("/example/", example_router)
 
 
 # ─── 异常处理器 ──────────────────────────────────────────────────

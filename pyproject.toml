@@ -86,11 +86,11 @@ warn_return_any = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["api.tests.*"]
+module = ["api.tests.*", "apps.*.tests.*"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = ["api.admin", "gunicorn.conf"]
+module = ["api.admin", "apps.*.admin", "gunicorn.conf"]
 disallow_untyped_defs = false
 disallow_any_generics = false
 
@@ -101,10 +101,10 @@ django_settings_module = "config.settings"
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py", "*_test.py"]
 addopts = "-v --tb=short"
-testpaths = ["api/tests"]
+testpaths = ["api/tests", "apps/example/tests"]
 
 [tool.coverage.run]
-source = ["api", "config"]
+source = ["api", "config", "common", "apps"]
 omit = ["*/tests/*", "*/migrations/*"]
 
 [tool.coverage.report]
@@ -117,7 +117,7 @@ skips = ["B101"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["config*", "api*"]
+include = ["config*", "api*", "common*", "apps*"]
 
 [build-system]
 requires = ["setuptools>=61.0"]

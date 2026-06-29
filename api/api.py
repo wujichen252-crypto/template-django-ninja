@@ -6,6 +6,7 @@
 - Service 层调用（禁止直接操作 ORM）
 - 分页查询支持
 """
+
 from typing import Any
 
 from django.http import HttpRequest
@@ -57,7 +58,9 @@ def get_item_endpoint(request: HttpRequest, item_id: int) -> Any:
 
 
 @router.patch("/items/{item_id}", response=ItemResponse, summary="更新商品")
-def update_item_endpoint(request: HttpRequest, item_id: int, payload: ItemUpdate) -> Any:
+def update_item_endpoint(
+    request: HttpRequest, item_id: int, payload: ItemUpdate
+) -> Any:
     """部分更新商品信息."""
     return update_item(item_id, payload)
 
