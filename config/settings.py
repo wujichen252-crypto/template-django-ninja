@@ -86,26 +86,42 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-# 通过 DATABASE_URL 环境变量配置，支持 PostgreSQL / MySQL / SQLite 等
-# 不设置默认值，必须显式配置，避免意外使用 SQLite 上线
+# 支持两种配置方式（二选一）：
+#   方式 A: DATABASE_URL 单行 URL（方便，推荐）
+#   方式 B: 逐项设置 DB_ENGINE / DB_NAME / DB_USER / ...（完全自定义）
 import dj_database_url  # noqa: E402
 
 _DATABASE_URL = os.environ.get("DATABASE_URL")
-if not _DATABASE_URL:
-    raise RuntimeError(
-        "❌ 未设置 DATABASE_URL 环境变量！\n"
-        "   请复制 .env.example 为 .env，并配置数据库连接：\n"
-        "   - 开发环境（SQLite）: DATABASE_URL=sqlite:///db.sqlite3\n"
-        "   - 生产环境（PostgreSQL）: DATABASE_URL=postgres://user:pass@host:5432/dbname\n"
-        "   - 安装数据库驱动: uv sync --dev --extra db"
-    )
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default=_DATABASE_URL,
-        conn_max_age=int(os.environ.get("DATABASE_CONN_MAX_AGE", "600")),
-    )
-}
+if _DATABASE_URL:
+    # 方式 A：单行 DATABASE_URL
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=_DATABASE_URL,
+            conn_max_age=int(os.environ.get("DATABASE_CONN_MAX_AGE", "600")),
+        )
+    }
+else:
+    # 方式 B：逐项手动配置
+    _DB_ENGINE = os.environ.get("DB_ENGINE")
+    if not _DB_ENGINE:
+        raise RuntimeError(
+            "❌ 未配置数据库！请在 .env 中设置：\n"
+            "   方式 A: DATABASE_URL=sqlite:///db.sqlite3\n"
+            "   方式 B: DB_ENGINE=django.db.backends.sqlite3\n"
+            "           DB_NAME=db.sqlite3"
+        )
+    DATABASES = {
+        "default": {
+            "ENGINE": _DB_ENGINE,
+            "NAME": os.environ.get("DB_NAME", ""),
+            "USER": os.environ.get("DB_USER", ""),
+            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+            "HOST": os.environ.get("DB_HOST", ""),
+            "PORT": os.environ.get("DB_PORT", ""),
+            "CONN_MAX_AGE": int(os.environ.get("DATABASE_CONN_MAX_AGE", "600")),
+        }
+    }
 
 # Password validation (已禁用，因项目不使用 Django 内置认证系统)
 AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = []
