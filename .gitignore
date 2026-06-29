@@ -119,6 +119,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# CLAUDE context files
+CLAUDE-*.md
+
 # IDE
 .idea/
 .vscode/

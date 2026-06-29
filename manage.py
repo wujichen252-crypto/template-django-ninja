@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Django 项目的命令行工具，用于管理 Django 项目."""
+
 import os
 import sys
 
