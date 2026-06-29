@@ -121,64 +121,95 @@ CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()
 # 日志格式由 LOG_FORMAT 环境变量控制:
 #   "text" (默认) → 可读文本格式，适合开发
 #   "json"       → JSON 格式，适合生产（ELK/Datadog 等）
+#
+# common.logging 不可用时（如新克隆项目缺少该文件），自动降级为基本配置。
 
 _LOG_FORMAT = os.environ.get("LOG_FORMAT", "text")
 _USE_JSON = _LOG_FORMAT == "json"
 
-# 通用过滤器（注入 request_id）
-_FILTERS = {
-    "request_id": {
-        "()": "common.logging.RequestIdFilter",
-    },
-}
+try:
+    # 尝试启用增强日志（request_id 追踪 + JSON 格式）
+    # 如果 common.logging 模块不存在，自动降级
+    import common.logging  # noqa: F401
 
-# 格式化器
-_FORMATTERS = {
-    "verbose": {
-        "format": (
-            "[%(request_id)s] %(levelname)s %(asctime)s"
-            " %(module)s:%(lineno)d %(message)s"
-        ),
-    },
-    "simple": {
-        "format": "[%(request_id)s] %(levelname)s %(message)s",
-    },
-}
-
-if _USE_JSON:
-    _FORMATTERS["json"] = {
-        "()": "common.logging.SimpleJsonFormatter",
+    _FILTERS = {
+        "request_id": {
+            "()": "common.logging.RequestIdFilter",
+        },
     }
 
-# 处理器
-_HANDLERS = {
-    "console": {
-        "level": "DEBUG",
-        "class": "logging.StreamHandler",
-        "formatter": "json" if _USE_JSON else "simple",
-        "filters": ["request_id"],
-    },
-    "file": {
-        "level": "DEBUG",
-        "class": "logging.handlers.RotatingFileHandler",
-        "filename": str(BASE_DIR / "logs" / "django.log"),
-        "maxBytes": 1024 * 1024 * 5,  # 5 MB
-        "backupCount": 5,
-        "formatter": "json" if _USE_JSON else "verbose",
-        "encoding": "utf-8",
-        "filters": ["request_id"],
-    },
-    "error_file": {
-        "level": "ERROR",
-        "class": "logging.handlers.RotatingFileHandler",
-        "filename": str(BASE_DIR / "logs" / "error.log"),
-        "maxBytes": 1024 * 1024 * 5,
-        "backupCount": 5,
-        "formatter": "json" if _USE_JSON else "verbose",
-        "encoding": "utf-8",
-        "filters": ["request_id"],
-    },
-}
+    _FORMATTERS = {
+        "verbose": {
+            "format": (
+                "[%(request_id)s] %(levelname)s %(asctime)s"
+                " %(module)s:%(lineno)d %(message)s"
+            ),
+        },
+        "simple": {
+            "format": "[%(request_id)s] %(levelname)s %(message)s",
+        },
+    }
+
+    if _USE_JSON:
+        _FORMATTERS["json"] = {
+            "()": "common.logging.SimpleJsonFormatter",
+        }
+
+    _HANDLERS = {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "json" if _USE_JSON else "simple",
+            "filters": ["request_id"],
+        },
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(BASE_DIR / "logs" / "django.log"),
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 5,
+            "formatter": "json" if _USE_JSON else "verbose",
+            "encoding": "utf-8",
+            "filters": ["request_id"],
+        },
+        "error_file": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(BASE_DIR / "logs" / "error.log"),
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 5,
+            "formatter": "json" if _USE_JSON else "verbose",
+            "encoding": "utf-8",
+            "filters": ["request_id"],
+        },
+    }
+except ImportError:
+    # 降级: 基本日志配置（无 request_id、无 JSON、无 error 独立文件）
+    _FILTERS = {}
+    _FORMATTERS = {
+        "verbose": {
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
+        },
+        "simple": {
+            "format": "%(levelname)s %(message)s",
+        },
+    }
+    _HANDLERS = {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(BASE_DIR / "logs" / "django.log"),
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 5,
+            "formatter": "verbose",
+            "encoding": "utf-8",
+        },
+    }
 
 _common_handlers = ["console", "file"] if not DEBUG else ["console"]
 
@@ -198,13 +229,12 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
-        # Django 请求日志: 5xx 服务器错误额外记到 error_file
         "django.request": {
-            "handlers": _common_handlers + ["error_file"],
+            "handlers": _common_handlers
+            + (["error_file"] if _HANDLERS.get("error_file") else []),
             "level": "ERROR",
             "propagate": False,
         },
-        # 业务模块（所有 apps/ 下的模块）
         "apps": {
             "handlers": _common_handlers,
             "level": "DEBUG" if DEBUG else "INFO",
