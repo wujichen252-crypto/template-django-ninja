@@ -50,6 +50,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "common.logging.RequestIdMiddleware",  # 请求追踪 ID
     "django.middleware.common.CommonMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -116,44 +117,96 @@ CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()
 # 如需允许所有来源（仅开发环境），取消下面注释
 # CORS_ALLOW_ALL_ORIGINS = DEBUG
 
-# Logging
+# ─── 日志配置 ──────────────────────────────────────────────────
+# 日志格式由 LOG_FORMAT 环境变量控制:
+#   "text" (默认) → 可读文本格式，适合开发
+#   "json"       → JSON 格式，适合生产（ELK/Datadog 等）
+
+_LOG_FORMAT = os.environ.get("LOG_FORMAT", "text")
+_USE_JSON = _LOG_FORMAT == "json"
+
+# 通用过滤器（注入 request_id）
+_FILTERS = {
+    "request_id": {
+        "()": "common.logging.RequestIdFilter",
+    },
+}
+
+# 格式化器
+_FORMATTERS = {
+    "verbose": {
+        "format": (
+            "[%(request_id)s] %(levelname)s %(asctime)s"
+            " %(module)s:%(lineno)d %(message)s"
+        ),
+    },
+    "simple": {
+        "format": "[%(request_id)s] %(levelname)s %(message)s",
+    },
+}
+
+if _USE_JSON:
+    _FORMATTERS["json"] = {
+        "()": "common.logging.SimpleJsonFormatter",
+    }
+
+# 处理器
+_HANDLERS = {
+    "console": {
+        "level": "DEBUG",
+        "class": "logging.StreamHandler",
+        "formatter": "json" if _USE_JSON else "simple",
+        "filters": ["request_id"],
+    },
+    "file": {
+        "level": "DEBUG",
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": str(BASE_DIR / "logs" / "django.log"),
+        "maxBytes": 1024 * 1024 * 5,  # 5 MB
+        "backupCount": 5,
+        "formatter": "json" if _USE_JSON else "verbose",
+        "encoding": "utf-8",
+        "filters": ["request_id"],
+    },
+    "error_file": {
+        "level": "ERROR",
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": str(BASE_DIR / "logs" / "error.log"),
+        "maxBytes": 1024 * 1024 * 5,
+        "backupCount": 5,
+        "formatter": "json" if _USE_JSON else "verbose",
+        "encoding": "utf-8",
+        "filters": ["request_id"],
+    },
+}
+
+_common_handlers = ["console", "file"] if not DEBUG else ["console"]
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
-        },
-        "simple": {
-            "format": "%(levelname)s %(message)s",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-        },
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": str(BASE_DIR / "logs" / "django.log"),
-            "maxBytes": 1024 * 1024 * 5,  # 5 MB
-            "backupCount": 5,
-            "formatter": "verbose",
-            "encoding": "utf-8",
-        },
-    },
+    "filters": _FILTERS,
+    "formatters": _FORMATTERS,
+    "handlers": _HANDLERS,
     "root": {
-        "handlers": ["console"],
+        "handlers": _common_handlers,
         "level": "INFO",
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "file"] if not DEBUG else ["console"],
+            "handlers": _common_handlers,
             "level": "INFO",
             "propagate": False,
         },
-        "api": {
-            "handlers": ["console", "file"],
+        # Django 请求日志: 5xx 服务器错误额外记到 error_file
+        "django.request": {
+            "handlers": _common_handlers + ["error_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        # 业务模块（所有 apps/ 下的模块）
+        "apps": {
+            "handlers": _common_handlers,
             "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },

@@ -1,6 +1,6 @@
 # Django + django-ninja RESTful API 模板
 
-基于 Django + django-ninja 的 RESTful API 后端模板项目，提供完整的项目结构、分层架构和最佳实践，**克隆即可运行**。
+基于 Django + django-ninja 的 RESTful API 后端模板项目，提供**多 App 架构**、**三层分层**和**自动化脚手架**，**克隆即可运行**。
 
 ## 技术栈
 
@@ -13,9 +13,11 @@
 | Python | 3.12+ |
 | 环境配置 | python-dotenv + dj-database-url |
 | 跨域 | django-cors-headers |
-| 测试 | pytest + pytest-django |
+| 测试 | pytest + pytest-django + coverage |
 | 类型检查 | mypy（严格模式） |
-| 代码检查 | ruff |
+| 代码检查 | ruff + bandit |
+| 容器化 | Docker + Docker Compose |
+| CI/CD | GitHub Actions |
 | 包管理 | uv |
 
 ## 快速开始
@@ -34,61 +36,112 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-> 📖 更详细的安装指南、数据库切换、常见问题请见 [docs/getting-started.md](./docs/getting-started.md)。
+> 📖 更详细的安装指南见 [docs/getting-started.md](./docs/getting-started.md)。
 
 ## 访问 API 文档
 
 - **Swagger UI**: http://127.0.0.1:8000/api/docs
-- **ReDoc**: http://127.0.0.1:8000/api/redoc
 - **健康检查**: http://127.0.0.1:8000/api/
+- **Demo 接口**: http://127.0.0.1:8000/api/demo/items
+- **Example 接口**: http://127.0.0.1:8000/api/example/tags
+
+## 新建业务模块
+
+一键创建完整的三层架构模块：
+
+```bash
+uv run python scaffold_app.py orders
+```
+
+自动生成 13 个文件 + 自动注册到 settings.py 和 urls.py：
+
+```
+apps/orders/
+├── __init__.py
+├── apps.py               # AppConfig
+├── models.py             # 数据模型（继承 TimestampMixin）
+├── schemas.py            # Pydantic Schema
+├── services.py           # 业务逻辑（事务保护）
+├── api.py                # CRUD 端点
+├── admin.py              # Admin 配置
+├── migrations/
+└── tests/                # 三层测试 + conftest
+```
+
+然后只需填充模型、Schema、业务逻辑，执行迁移：
+
+```bash
+uv run python manage.py makemigrations orders
+uv run python manage.py migrate orders
+uv run pytest apps/orders/tests/ -v
+```
 
 ## 项目结构
 
 ```
 project_root/
-├── api/                      # 主应用模块
-│   ├── __init__.py
-│   ├── api.py              # API 路由定义
-│   ├── apps.py             # 应用配置
-│   ├── models.py           # 数据模型
-│   ├── schemas.py          # Pydantic Schema
-│   ├── services.py         # 业务逻辑层
-│   ├── views.py            # 视图层
-│   └── tests/              # 测试目录
-├── config/                  # Django 项目配置
-├── logs/                    # 日志目录
-├── docs/                    # 📖 项目文档
-│   ├── getting-started.md   # 详细启动指南
-│   ├── architecture.md     # 架构设计说明
-│   └── uv-best-practice.md  # uv 使用最佳实践
+├── api/                      # Demo/参考应用（路由: /api/demo/）
+├── apps/                     # 业务模块命名空间
+│   └── example/            # 参考 App（路由: /api/example/）
+├── common/                   # 共享基础设施
+│   └── base/
+│       ├── models.py       # TimestampMixin, SoftDeleteMixin
+│       ├── exceptions.py   # BusinessError
+│       └── schemas.py      # PaginatedResponse, ErrorResponse
+├── config/                   # Django 项目配置
+├── deploy/                   # Nginx 生产配置
+├── docs/                     # 📖 项目文档
+│   ├── getting-started.md
+│   ├── architecture.md
+│   ├── multi-app-guide.md  # 多 App 开发指南
+│   └── uv-best-practice.md
+├── scaffold_app.py           # 🔧 一键创建业务模块
+├── Makefile                  # 🔧 常用命令快捷
+├── Dockerfile                # 🐳 多阶段构建
+├── docker-compose.yml        # 🐳 Django + PostgreSQL + Redis
+├── .github/workflows/ci.yml  # 🔄 CI/CD 流水线
 ├── manage.py
-├── pyproject.toml           # 项目配置 + 依赖声明
-├── uv.lock                  # 依赖锁定文件
-├── .env.example             # 环境变量模板
-└── README.md
+├── pyproject.toml
+├── uv.lock
+└── .env.example
 ```
-
-> 📖 完整的架构说明请见 [docs/architecture.md](./docs/architecture.md)。
 
 ## 开发命令
 
 ```bash
-# 运行测试
-uv run pytest
+# 安装依赖
+uv sync --dev
 
-# 代码检查
-uv run ruff check .
+# 数据库迁移
+uv run python manage.py migrate
 
-# 代码格式化
-uv run ruff format .
+# 新建业务模块
+uv run python scaffold_app.py <模块名>
 
-# 类型检查
-uv run mypy .
+# 启动服务
+uv run python manage.py runserver
+
+# 运行测试（带覆盖率）
+make test
+
+# 代码检查 + 格式化 + 类型检查
+make check
+
+# 安全扫描
+make security
+
+# Docker 开发环境
+make docker-up
+
+# 查看所有命令
+make help
 ```
 
 ## 代码规范
 
-- 所有函数/方法必须包含完整类型注解
-- 函数长度不超过 50 行
-- 使用 Google 风格 Docstring
-- 导入顺序: 标准库 -> 第三方库 -> Django -> 本地应用
+- **三层架构**: API 层不直接操作 ORM，Service 层不处理 HTTP 请求
+- **多 App 独立**: 每个业务模块是一个独立的 Django App
+- **共享基类**: `TimestampMixin`、`BusinessError`、`PaginatedResponse` 来自 `common/`
+- **所有函数/方法**必须包含完整类型注解
+- **使用 Google 风格 Docstring**
+- **导入顺序**: 标准库 → 第三方库 → Django → 本地应用
