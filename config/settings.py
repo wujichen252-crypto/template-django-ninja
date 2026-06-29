@@ -86,12 +86,24 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# 通过 DATABASE_URL 环境变量配置，支持 PostgreSQL / MySQL / SQLite 等
+# 不设置默认值，必须显式配置，避免意外使用 SQLite 上线
 import dj_database_url  # noqa: E402
+
+_DATABASE_URL = os.environ.get("DATABASE_URL")
+if not _DATABASE_URL:
+    raise RuntimeError(
+        "❌ 未设置 DATABASE_URL 环境变量！\n"
+        "   请复制 .env.example 为 .env，并配置数据库连接：\n"
+        "   - 开发环境（SQLite）: DATABASE_URL=sqlite:///db.sqlite3\n"
+        "   - 生产环境（PostgreSQL）: DATABASE_URL=postgres://user:pass@host:5432/dbname\n"
+        "   - 安装数据库驱动: uv sync --dev --extra db"
+    )
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
+        default=_DATABASE_URL,
+        conn_max_age=int(os.environ.get("DATABASE_CONN_MAX_AGE", "600")),
     )
 }
 
