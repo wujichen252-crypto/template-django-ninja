@@ -6,10 +6,10 @@
 
 | 项目 | 版本 |
 |------|------|
-| Python | >= 3.10 |
+| Python | >= 3.12 |
 | 包管理器 | uv |
 
-> 项目根目录的 `.python-version` 文件已锁定 Python 版本为 `3.10`，建议使用 [pyenv](https://github.com/pyenv/pyenv) 或 uv 管理 Python 版本。
+> 项目根目录的 `.python-version` 文件已锁定 Python 版本为 `3.12`，建议使用 [pyenv](https://github.com/pyenv/pyenv) 或 uv 管理 Python 版本。
 
 ## 使用 uv
 

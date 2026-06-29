@@ -10,6 +10,7 @@
 | REST API | django-ninja 1.3.0 |
 | 数据验证 | Pydantic v2 |
 | 数据库 | SQLite（默认）/ PostgreSQL / MySQL |
+| Python | 3.12+ |
 | 环境配置 | python-dotenv + dj-database-url |
 | 跨域 | django-cors-headers |
 | 测试 | pytest + pytest-django |
